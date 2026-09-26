@@ -3,6 +3,10 @@ import Country from '../models/Country.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
+import {
+  sendEnquiryConfirmation,
+  sendAgencyNotification,
+} from '../services/emailService.js';
 
 /**
  * @desc    Create enquiry (PUBLIC)
@@ -12,21 +16,32 @@ import ApiResponse from '../utils/ApiResponse.js';
 export const createEnquiry = asyncHandler(async (req, res) => {
   const { fullName, email, phone, preferredCountry, consent } = req.body;
 
-  // Basic server-side check
   if (!fullName || !email || !phone || !consent) {
     throw new ApiError(400, 'Name, email, phone and consent are required');
   }
 
-  // Validate country if provided
   if (preferredCountry) {
     const countryExists = await Country.findById(preferredCountry);
     if (!countryExists) throw new ApiError(400, 'Invalid country');
   }
 
+  // 1. Save enquiry
   const enquiry = await Enquiry.create(req.body);
 
-  // TODO Phase 5: Send confirmation email to student + notification to agency
+  // 2. Send emails (non-blocking)
+  Promise.allSettled([
+    sendEnquiryConfirmation(enquiry),
+    sendAgencyNotification(enquiry),
+  ]).then((results) => {
+    results.forEach((r, i) => {
+      const label = i === 0 ? 'student confirmation' : 'agency notification';
+      if (r.status === 'rejected') {
+        console.error(`❌ Email (${label}) failed:`, r.reason);
+      }
+    });
+  });
 
+  // 3. Respond immediately
   res.status(201).json(
     new ApiResponse(
       201,
@@ -45,7 +60,6 @@ export const createEnquiry = asyncHandler(async (req, res) => {
 /**
  * @desc    Get all enquiries (Admin)
  * @route   GET /api/enquiries
- * @access  Admin (Phase 6 protects this)
  */
 export const getEnquiries = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
@@ -54,7 +68,6 @@ export const getEnquiries = asyncHandler(async (req, res) => {
 
   const filter = {};
   if (req.query.status) filter.status = req.query.status;
-
   if (req.query.search) {
     filter.$or = [
       { fullName: { $regex: req.query.search, $options: 'i' } },
@@ -80,11 +93,6 @@ export const getEnquiries = asyncHandler(async (req, res) => {
   );
 });
 
-/**
- * @desc    Get single enquiry
- * @route   GET /api/enquiries/:id
- * @access  Admin
- */
 export const getEnquiryById = asyncHandler(async (req, res) => {
   const enquiry = await Enquiry.findById(req.params.id).populate(
     'preferredCountry',
@@ -94,11 +102,6 @@ export const getEnquiryById = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, { enquiry }));
 });
 
-/**
- * @desc    Update enquiry status
- * @route   PATCH /api/enquiries/:id/status
- * @access  Admin
- */
 export const updateEnquiryStatus = asyncHandler(async (req, res) => {
   const { status, note } = req.body;
   if (!status) throw new ApiError(400, 'Status is required');
@@ -114,15 +117,9 @@ export const updateEnquiryStatus = asyncHandler(async (req, res) => {
   });
 
   await enquiry.save();
-
   res.status(200).json(new ApiResponse(200, { enquiry }, 'Status updated'));
 });
 
-/**
- * @desc    Delete enquiry
- * @route   DELETE /api/enquiries/:id
- * @access  Admin
- */
 export const deleteEnquiry = asyncHandler(async (req, res) => {
   const enquiry = await Enquiry.findByIdAndDelete(req.params.id);
   if (!enquiry) throw new ApiError(404, 'Enquiry not found');
