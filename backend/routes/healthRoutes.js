@@ -2,6 +2,10 @@ import express from 'express';
 
 const router = express.Router();
 
+/**
+ * GET /api/health
+ * Simple health check to verify server is running.
+ */
 router.get('/', (req, res) => {
   res.status(200).json({
     success: true,

@@ -10,13 +10,20 @@ import hpp from 'hpp';
 
 import connectDB from './config/db.js';
 import healthRoutes from './routes/healthRoutes.js';
+import countryRoutes from './routes/countryRoutes.js';
+import universityRoutes from './routes/universityRoutes.js';
+import courseRoutes from './routes/courseRoutes.js';
+import scholarshipRoutes from './routes/scholarshipRoutes.js';
+import enquiryRoutes from './routes/enquiryRoutes.js';
+import notFound from './middleware/notFound.js';
+import errorHandler from './middleware/errorHandler.js';
 
 dotenv.config();
-
 connectDB();
 
 const app = express();
 
+// ---------- MIDDLEWARE ----------
 app.use(helmet());
 app.use(compression());
 app.use(mongoSanitize());
@@ -36,8 +43,17 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
+// ---------- HEALTH CHECK ----------
 app.use('/api/health', healthRoutes);
 
+// ---------- API ROUTES ----------
+app.use('/api/countries', countryRoutes);
+app.use('/api/universities', universityRoutes);
+app.use('/api/courses', courseRoutes);
+app.use('/api/scholarships', scholarshipRoutes);
+app.use('/api/enquiries', enquiryRoutes);
+
+// ---------- ROOT ----------
 app.get('/', (req, res) => {
   res.json({
     success: true,
@@ -46,23 +62,11 @@ app.get('/', (req, res) => {
   });
 });
 
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: `Route ${req.originalUrl} not found`,
-  });
-});
+// ---------- ERROR HANDLING ----------
+app.use(notFound);
+app.use(errorHandler);
 
-app.use((err, req, res, next) => {
-  console.error('❌ Error:', err.message);
-  const statusCode = err.statusCode || 500;
-  res.status(statusCode).json({
-    success: false,
-    message: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
-  });
-});
-
+// ---------- START ----------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);

@@ -1,12 +1,14 @@
 import { Routes, Route } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 
-// Public pages
 import Home from '../pages/public/Home';
 import About from '../pages/public/About';
 import Countries from '../pages/public/Countries';
+import CountryDetail from '../pages/public/CountryDetail';
 import Universities from '../pages/public/Universities';
+import UniversityDetail from '../pages/public/UniversityDetail';
 import Courses from '../pages/public/Courses';
+import CourseDetail from '../pages/public/CourseDetail';
 import Scholarships from '../pages/public/Scholarships';
 import AdmissionProcess from '../pages/public/AdmissionProcess';
 import VisaGuidance from '../pages/public/VisaGuidance';
@@ -23,8 +25,11 @@ const AppRoutes = () => {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/countries" element={<Countries />} />
+        <Route path="/countries/:slug" element={<CountryDetail />} />
         <Route path="/universities" element={<Universities />} />
+        <Route path="/universities/:slug" element={<UniversityDetail />} />
         <Route path="/courses" element={<Courses />} />
+        <Route path="/courses/:slug" element={<CourseDetail />} />
         <Route path="/scholarships" element={<Scholarships />} />
         <Route path="/admission-process" element={<AdmissionProcess />} />
         <Route path="/visa-guidance" element={<VisaGuidance />} />
