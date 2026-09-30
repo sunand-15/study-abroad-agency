@@ -24,7 +24,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
         <div>
           <h1 className="text-3xl font-bold text-navy-900 mb-3">Access Denied</h1>
           <p className="text-navy-600">
-            You don't have permission to view this page.
+            You don't have permission to view this page...
           </p>
         </div>
       </div>
