@@ -67,10 +67,10 @@ const Navbar = () => {
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-3">
             <Link
-              to="/counselling"
+              to="/admin/login"
               className="text-sm font-semibold text-navy-700 hover:text-primary-600 transition-colors"
             >
-              Book Counselling
+              Admin Login
             </Link>
             <Link
               to="/enquiry"
@@ -116,12 +116,21 @@ const Navbar = () => {
               <hr className="my-4 border-navy-100" />
 
               <Link
+                to="/admin/login"
+                onClick={() => setIsOpen(false)}
+                className="px-4 py-3 rounded-xl text-base font-medium text-navy-700 hover:bg-navy-50"
+              >
+                Admin Login
+              </Link>
+
+              <Link
                 to="/counselling"
                 onClick={() => setIsOpen(false)}
                 className="btn-outline text-center"
               >
                 Book Counselling
               </Link>
+
               <Link
                 to="/enquiry"
                 onClick={() => setIsOpen(false)}
